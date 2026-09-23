@@ -87,31 +87,121 @@
   bill.addEventListener("input", updateSim);
   updateSim();
 
-  /* ---------- Formulário -> WhatsApp ---------- */
+  /* ---------- Formulário de orçamento -> CRM ---------- */
+  // TODO(CRM): preencher com o endpoint do CRM quando estiver disponível.
+  // Enquanto estiver vazio, o envio é simulado (nenhum dado sai do navegador).
+  const CRM_ENDPOINT = "";
+  const CRM_HEADERS = { "Content-Type": "application/json" };
+
   const form = $("#leadForm");
-  const error = $("#formError");
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const data = new FormData(form);
-    const nome = (data.get("nome") || "").toString().trim();
-    if (!nome) {
-      error.hidden = false;
-      $("#fName").focus();
+  const success = $("#formSuccess");
+  const alertBox = $("#formAlert");
+  const phone = $("#fPhone");
+  const billInput = $("#fBill");
+
+  // UTMs da URL para o CRM saber de onde veio o lead
+  const params = new URLSearchParams(location.search);
+  ["utm_source", "utm_medium", "utm_campaign"].forEach((k) => {
+    if (params.get(k)) form.elements[k].value = params.get(k);
+  });
+
+  const onlyDigits = (v) => v.replace(/\D/g, "");
+  phone.addEventListener("input", () => {
+    const d = onlyDigits(phone.value).slice(0, 11);
+    let out = d;
+    if (d.length > 2) out = `(${d.slice(0, 2)}) ${d.slice(2)}`;
+    if (d.length > 7) out = `(${d.slice(0, 2)}) ${d.slice(2, d.length - 4)}-${d.slice(-4)}`;
+    phone.value = out;
+  });
+  billInput.addEventListener("input", () => {
+    const d = onlyDigits(billInput.value).slice(0, 7);
+    billInput.value = d ? Number(d).toLocaleString("pt-BR") : "";
+  });
+
+  const rules = {
+    fName: (el) => el.value.trim().length >= 2,
+    fPhone: (el) => onlyDigits(el.value).length >= 10,
+    fEmail: (el) => !el.value.trim() || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim()),
+    fConsent: (el) => el.checked,
+  };
+  const validate = (id) => {
+    const el = $("#" + id);
+    const ok = rules[id](el);
+    el.closest(".field").classList.toggle("is-invalid", !ok);
+    el.setAttribute("aria-invalid", String(!ok));
+    el.setAttribute("aria-describedby", id + "Err");
+    return ok;
+  };
+  Object.keys(rules).forEach((id) => {
+    const el = $("#" + id);
+    el.addEventListener("blur", () => { if (el.value || el.type === "checkbox") validate(id); });
+    el.addEventListener(el.type === "checkbox" ? "change" : "input", () => {
+      if (el.closest(".field").classList.contains("is-invalid")) validate(id);
+    });
+  });
+
+  async function sendLead(lead) {
+    if (!CRM_ENDPOINT) {
+      console.info("[W7] Lead (simulado, CRM ainda não configurado):", lead);
+      await new Promise((r) => setTimeout(r, 1200));
       return;
     }
-    error.hidden = true;
-    const cidade = (data.get("cidade") || "").toString().trim();
-    const conta = (data.get("conta") || "").toString().trim();
-    const tipo = data.get("tipo");
+    const res = await fetch(CRM_ENDPOINT, { method: "POST", headers: CRM_HEADERS, body: JSON.stringify(lead) });
+    if (!res.ok) throw new Error(`CRM respondeu ${res.status}`);
+  }
 
-    const lines = [
-      `Olá, W7 Energy! Meu nome é ${nome}.`,
-      `Gostaria de um orçamento de energia solar (${tipo}).`,
-      cidade && `Cidade: ${cidade}`,
-      conta && `Conta de luz média: R$ ${conta}`,
-    ].filter(Boolean);
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    alertBox.hidden = true;
+    const invalid = Object.keys(rules).filter((id) => !validate(id));
+    if (invalid.length) {
+      $("#" + invalid[0]).focus();
+      return;
+    }
 
-    window.open(waLink(lines.join("\n")), "_blank", "noopener");
+    const data = new FormData(form);
+    const get = (k) => (data.get(k) || "").toString().trim();
+    const lead = {
+      nome: get("nome"),
+      telefone: "+55" + onlyDigits(get("telefone")),
+      email: get("email") || null,
+      cidade: get("cidade") || null,
+      conta_media: get("conta") ? Number(onlyDigits(get("conta"))) : null,
+      tipo_projeto: get("tipo"),
+      consentimento_lgpd: true,
+      origem: get("origem"),
+      utm_source: get("utm_source") || null,
+      utm_medium: get("utm_medium") || null,
+      utm_campaign: get("utm_campaign") || null,
+      pagina: location.href,
+      enviado_em: new Date().toISOString(),
+    };
+
+    form.classList.add("is-loading");
+    form.setAttribute("aria-busy", "true");
+    try {
+      await sendLead(lead);
+      const first = lead.nome.split(" ")[0];
+      $("#successName").textContent = first;
+      $("#successWa").href = waLink(`Olá, W7 Energy! Sou ${lead.nome} e acabei de solicitar um orçamento pelo site (${lead.tipo_projeto}).`);
+      form.hidden = true;
+      success.hidden = false;
+      success.focus();
+    } catch (err) {
+      console.error(err);
+      alertBox.hidden = false;
+    } finally {
+      form.classList.remove("is-loading");
+      form.removeAttribute("aria-busy");
+    }
+  });
+
+  $("#formAgain").addEventListener("click", () => {
+    form.reset();
+    form.querySelectorAll(".is-invalid").forEach((f) => f.classList.remove("is-invalid"));
+    success.hidden = true;
+    form.hidden = false;
+    $("#fName").focus();
   });
 
   /* ---------- Ano no rodapé ---------- */

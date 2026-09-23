@@ -425,7 +425,12 @@
         <div class="contact__text">
           <p class="eyebrow eyebrow--y">Faça seu orçamento</p>
           <h2>Chegou a sua vez de parar de desperdiçar dinheiro com conta de energia cara.</h2>
-          <p class="section__sub section__sub--light">Preencha os dados e fale direto com a nossa equipe pelo WhatsApp. O orçamento é gratuito e sem compromisso.</p>
+          <p class="section__sub section__sub--light">Preencha seus dados e um especialista da W7 entra em contato com uma proposta sob medida. O orçamento é gratuito e sem compromisso.</p>
+          <ul class="contact__perks">
+            <li>Resposta em até 1 dia útil</li>
+            <li>Análise gratuita da sua conta de luz</li>
+            <li>Seus dados protegidos (LGPD)</li>
+          </ul>
           <ul class="contact__info">
             <li><span>📞</span><a href="https://wa.me/5527997214733" target="_blank" rel="noopener">(27) 99721-4733</a></li>
             <li><span>📍</span>Linhares - ES e região</li>
@@ -433,34 +438,84 @@
           </ul>
         </div>
 
-        <form class="form" id="leadForm" novalidate>
-          <div class="field">
-            <label for="fName">Nome</label>
-            <input id="fName" name="nome" type="text" autocomplete="name" placeholder="Seu nome" required>
-          </div>
-          <div class="field-row">
+        <div class="form-wrap">
+          <form class="form" id="leadForm" novalidate>
+            <div class="form__head">
+              <h3>Solicite seu orçamento</h3>
+              <p>Leva menos de 1 minuto.</p>
+            </div>
+
             <div class="field">
-              <label for="fCity">Cidade</label>
-              <input id="fCity" name="cidade" type="text" autocomplete="address-level2" placeholder="Ex.: Linhares">
+              <label for="fName">Nome completo <span class="req" aria-hidden="true">*</span></label>
+              <input id="fName" name="nome" type="text" autocomplete="name" placeholder="Seu nome" required>
+              <small class="field__error" id="fNameErr">Informe seu nome.</small>
             </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="fPhone">WhatsApp <span class="req" aria-hidden="true">*</span></label>
+                <input id="fPhone" name="telefone" type="tel" autocomplete="tel-national" inputmode="numeric" placeholder="(27) 99999-9999" maxlength="15" required>
+                <small class="field__error" id="fPhoneErr">Informe um número válido com DDD.</small>
+              </div>
+              <div class="field">
+                <label for="fEmail">E-mail <span class="opt">(opcional)</span></label>
+                <input id="fEmail" name="email" type="email" autocomplete="email" placeholder="voce@email.com">
+                <small class="field__error" id="fEmailErr">E-mail inválido.</small>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="fCity">Cidade</label>
+                <input id="fCity" name="cidade" type="text" autocomplete="address-level2" placeholder="Ex.: Linhares">
+              </div>
+              <div class="field">
+                <label for="fBill">Conta de luz média</label>
+                <div class="input-prefix">
+                  <span>R$</span>
+                  <input id="fBill" name="conta" type="text" inputmode="numeric" placeholder="450">
+                </div>
+              </div>
+            </div>
+            <fieldset class="field">
+              <legend>Tipo de projeto</legend>
+              <div class="chips">
+                <label><input type="radio" name="tipo" value="Residencial" checked><span>Residencial</span></label>
+                <label><input type="radio" name="tipo" value="Empresarial"><span>Empresarial</span></label>
+                <label><input type="radio" name="tipo" value="Rural"><span>Rural</span></label>
+                <label><input type="radio" name="tipo" value="Limpeza/Manutenção"><span>Limpeza</span></label>
+              </div>
+            </fieldset>
             <div class="field">
-              <label for="fBill">Conta média (R$)</label>
-              <input id="fBill" name="conta" type="text" inputmode="numeric" placeholder="Ex.: 450">
+              <label class="consent">
+                <input type="checkbox" id="fConsent" name="consentimento" required>
+                <span>Autorizo a W7 Energy a entrar em contato e a tratar meus dados para elaborar o orçamento, conforme a LGPD.</span>
+              </label>
+              <small class="field__error" id="fConsentErr">É necessário autorizar o contato.</small>
             </div>
+
+            <!-- rastreamento de origem, preenchido via JS para o CRM -->
+            <input type="hidden" name="origem" value="site">
+            <input type="hidden" name="utm_source">
+            <input type="hidden" name="utm_medium">
+            <input type="hidden" name="utm_campaign">
+
+            <p class="form__alert" id="formAlert" role="alert" hidden>Não foi possível enviar agora. Tente novamente ou fale com a gente pelo WhatsApp.</p>
+            <button type="submit" class="btn btn--yellow btn--block btn--lg form__submit" id="formSubmit">
+              <span class="form__submit-label">Solicitar orçamento grátis</span>
+              <span class="spinner" aria-hidden="true"></span>
+            </button>
+            <p class="form__hint">Prefere conversar agora? <a href="https://wa.me/5527997214733" target="_blank" rel="noopener">Chame no WhatsApp</a></p>
+          </form>
+
+          <div class="form-success" id="formSuccess" hidden tabindex="-1">
+            <div class="form-success__icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="36" height="36"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <h3>Recebemos seus dados, <span id="successName">tudo certo</span>!</h3>
+            <p>Um especialista da W7 Energy vai entrar em contato pelo WhatsApp em até 1 dia útil com a sua proposta.</p>
+            <a href="https://wa.me/5527997214733" target="_blank" rel="noopener" class="btn btn--yellow btn--block" id="successWa">Adiantar conversa no WhatsApp</a>
+            <button type="button" class="form-success__again" id="formAgain">Enviar outra solicitação</button>
           </div>
-          <fieldset class="field">
-            <legend>Tipo de projeto</legend>
-            <div class="chips">
-              <label><input type="radio" name="tipo" value="Residencial" checked><span>Residencial</span></label>
-              <label><input type="radio" name="tipo" value="Empresarial"><span>Empresarial</span></label>
-              <label><input type="radio" name="tipo" value="Rural"><span>Rural</span></label>
-              <label><input type="radio" name="tipo" value="Limpeza/Manutenção"><span>Limpeza</span></label>
-            </div>
-          </fieldset>
-          <p class="form__error" id="formError" role="alert" hidden>Por favor, informe seu nome.</p>
-          <button type="submit" class="btn btn--yellow btn--block btn--lg">Enviar pelo WhatsApp</button>
-          <p class="form__hint">Você será direcionado ao WhatsApp com a mensagem pronta.</p>
-        </form>
+        </div>
       </div>
     </section>
   </main>

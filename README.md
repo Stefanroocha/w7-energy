@@ -29,6 +29,44 @@ python3 -m http.server 8000
 - **Fotos dos projetos:** adicione a imagem em `assets/` e aplique no card:
   `<div class="project__img has-photo" style="background-image:url(assets/projeto-1.jpg)">`
 
+## Formulário de orçamento → CRM
+
+O formulário (`#leadForm`) já valida os campos, mostra carregamento e tela de sucesso.
+Enquanto o CRM não estiver conectado, o envio é **simulado** (nada sai do navegador; o lead aparece no console).
+
+Para conectar, em `js/main.js`:
+
+```js
+const CRM_ENDPOINT = "https://seu-crm.com/api/leads";   // URL do webhook/API
+const CRM_HEADERS  = { "Content-Type": "application/json" /*, "Authorization": "Bearer ..." */ };
+```
+
+Payload enviado (POST, JSON):
+
+```json
+{
+  "nome": "Maria da Silva",
+  "telefone": "+5527997214733",
+  "email": null,
+  "cidade": "Linhares",
+  "conta_media": 1250,
+  "tipo_projeto": "Residencial",
+  "consentimento_lgpd": true,
+  "origem": "site",
+  "utm_source": "instagram",
+  "utm_medium": null,
+  "utm_campaign": null,
+  "pagina": "https://.../?utm_source=instagram",
+  "enviado_em": "2026-09-23T15:00:00.000Z"
+}
+```
+
+Se o CRM exigir outro formato (form-data, nomes de campo diferentes), ajuste a função `sendLead`.
+Qualquer resposta que não seja 2xx mostra a mensagem de erro com o link do WhatsApp.
+
+> Não coloque chaves secretas do CRM no front-end — o código é público. Use um webhook
+> sem segredo (ex.: formulário/webhook do próprio CRM) ou um intermediário (Zapier, Make, n8n, função serverless).
+
 ## Publicação
 
 Publicado com GitHub Pages a partir da branch `main`.
